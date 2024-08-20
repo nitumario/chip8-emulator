@@ -22,8 +22,8 @@ uint8_t keypad[16];
 uint32_t video[64 * 32]; // memory buffer for storing the graphics to display
 uint16_t opcode;
 
-
-uint8_t chip8_fontset[80] =
+const unsigned int FONTSET_SIZE = 80;
+uint8_t fontset[FONTSET_SIZE] =
 {
 	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
 	0x20, 0x60, 0x20, 0x20, 0x70, // 1
