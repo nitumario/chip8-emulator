@@ -68,6 +68,7 @@ void op_2nnn(){
     pc = opcode & 0x0FFFu;
 }
 
+// skip next instruction if Vx = kk.
 void op_3xkk(){
     uint8_t x = (opcode & 0x0F00u) >> 8u; // get the x value and shift it to the right
     uint8_t kk = opcode & 0x00FFu; // get the kk value
@@ -77,6 +78,7 @@ void op_3xkk(){
     }
 }
 
+//  skip next instruction if Vx != kk.
 void op_4xkk(){
     uint8_t x = (opcode & 0x0F00u) >> 8u; // get the x value and shift it to the right
     uint8_t kk = opcode & 0x00FFu; // get the kk value
@@ -157,4 +159,15 @@ void op_8xy5(){
     else
         registers[0xF] = 0;
     registers[x] -= registers[y];
+}       
+
+//  set Vx = Vx SHR 1.
+void op_8xy6(){
+    uint8_t x = (opcode & 0x0F00u) >> 8u;
+    registers[0xF] = registers[x] & 0x1; // store the lsb in VF
+    registers[x] >>= 1; // shift Vx to the right by 1
+}
+
+void op_8xy7(){
+
 }
