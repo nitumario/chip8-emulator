@@ -168,6 +168,13 @@ void op_8xy6(){
     registers[x] >>= 1; // shift Vx to the right by 1
 }
 
+// set Vx = Vy - Vx, set VF = NOT borrow.
 void op_8xy7(){
-
-}
+    uint8_t x = (opcode & 0x0F00u) >> 8u;
+    uint8_t y = (opcode & 0x00F0u) >> 4u;
+    if (registers[y] > registers[x])
+        registers[0xF] = 1;
+    else
+        registers[0xF] = 0;
+    registers[x] = registers[y] - registers[x];
+} 
