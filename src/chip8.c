@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdint.h> 
+#include <stdlib.h>  
+#include <time.h> 
 
 #include "chip8.h"
 
@@ -42,6 +44,10 @@ void init(){
     for (unsigned int i = 0; i < FONTSET_SIZE; i++){
         memory[FONTSET_START_ADDRESS + i] = fontset[i];
     }
+}
+
+int rand_byte(){
+    return rand() % 256;
 }
 
 // clear the display
@@ -161,14 +167,14 @@ void op_8xy5(){
     registers[x] -= registers[y];
 }       
 
-//  set Vx = Vx SHR 1.
+//  set Vx = Vx SHR 1
 void op_8xy6(){
     uint8_t x = (opcode & 0x0F00u) >> 8u;
     registers[0xF] = registers[x] & 0x1; // store the lsb in VF
     registers[x] >>= 1; // shift Vx to the right by 1
 }
 
-// set Vx = Vy - Vx, set VF = NOT borrow.
+// set Vx = Vy - Vx, set VF = NOT borrow
 void op_8xy7(){
     uint8_t x = (opcode & 0x0F00u) >> 8u;
     uint8_t y = (opcode & 0x00F0u) >> 4u;
@@ -178,3 +184,56 @@ void op_8xy7(){
         registers[0xF] = 0;
     registers[x] = registers[y] - registers[x];
 } 
+
+// set Vx = Vx SHL 1
+void op_8xyE(){
+    uint8_t x = (opcode & 0x0F00u) >> 8u;
+    registers[0xF] = (registers[x] & 0x80u) >> 7u; // store the msb in VF
+    registers[x] <<= 1; // shift Vx to the left by 1
+}
+
+// skip next instruction if Vx != Vy
+void op_9xy0(){
+    uint8_t x = (opcode & 0x0F00u) >> 8u;
+    uint8_t y = (opcode & 0x00F0u) >> 4u;
+    if (registers[x] != registers[y])
+        pc += 2;
+}
+
+// set I = nnn
+void op_Annn(){
+    index = opcode & 0x0FFFu;
+}
+
+// jump to location nnn + V0
+void op_Bnnn(){
+    pc = (opcode & 0x0FFFu) + registers[0];
+}
+
+// set Vx = random byte AND kk
+void op_Cxkk(){
+    uint8_t x = (opcode & 0x0F00u) >> 8u;
+    uint8_t kk = opcode & 0x00FFu;
+    registers[x] = rand() & kk;
+}
+
+// display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision
+void op_Dxyn(){
+    uint8_t x = registers[(opcode & 0x0F00u) >> 8u];
+    uint8_t y = registers[(opcode & 0x00F0u) >> 4u];
+    uint8_t height = opcode & 0x000Fu;
+    uint8_t pixel;
+
+    registers[0xF] = 0;
+    for (unsigned int yline = 0; yline < height; yline++) {
+        pixel = memory[index + yline];
+        for (unsigned int xline = 0; xline < 8; xline++) {
+            if ((pixel & (0x80u >> xline)) != 0) {
+                if (video[(x + xline + ((y + yline) * 64))] == 1)
+                    registers[0xF] = 1;
+                video[x + xline + ((y + yline) * 64)] ^= 1;
+            }
+        }
+    }
+}
+
